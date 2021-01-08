@@ -11,7 +11,7 @@ source("ClimateObjects.R")
 annoI<-1991
 annoF<-2020
 
-REGIONE<-"FVG"
+REGIONE<-"aeronautica"
 
 #se TRUE verifica che gli ultimi anni ULTIMI.ANNI della serie non sia tutta di NA, questo perche'
 #e' importante che il climatologico sia rappresentativo degli ultimi anni e non solo dell'inizio
@@ -60,7 +60,9 @@ stopifnot(length(ffile)>0)
 
 creaCalendario(annoI=annoI,annoF=annoF)->calendario
 
-purrr::walk2(listaParametri,listaAnniMancanti,.f=function(PARAMETRO,ANNIMANCANTI){
+purrr::walk2(rep(listaParametri,each=length(listaAnniMancanti)),rep(listaAnniMancanti,length(listaParametri)),.f=function(PARAMETRO,ANNIMANCANTI){
+  
+  message(glue::glue("Elaboro {PARAMETRO} anni mancanti {ANNIMANCANTI}"))
   
   #Prcp e' il nome della precipitazione nel file dei dati di input
   if(grepl("^P.+",PARAMETRO)) PARAMETRO<-"Prcp"
@@ -156,6 +158,7 @@ purrr::walk2(listaParametri,listaAnniMancanti,.f=function(PARAMETRO,ANNIMANCANTI
     left_join(gvaloriAnnuali,ana)->gvaloriAnnuali
     
     gvaloriAnnuali %>% 
+      filter(!is.na(climatologico)) %>%
       dplyr::select(yy,SiteID,climatologico,SiteCode,SiteName,Latitude,Longitude,matches("Elevation"))->gvaloriAnnuali
     
     gvaloriAnnuali$regione<-REGIONE
@@ -176,7 +179,8 @@ purrr::walk2(listaParametri,listaAnniMancanti,.f=function(PARAMETRO,ANNIMANCANTI
     left_join(gvaloriMensili,ana)->gvaloriMensili
     
     gvaloriMensili %>% 
-      dplyr::select(yy,SiteID,climatologico,SiteCode,SiteName,Latitude,Longitude,matches("Elevation"))->gvaloriMensili
+      filter(!is.na(climatologico)) %>%
+      dplyr::select(yy,mm,SiteID,climatologico,SiteCode,SiteName,Latitude,Longitude,matches("Elevation"))->gvaloriMensili
     
     gvaloriMensili$regione<-REGIONE
     
